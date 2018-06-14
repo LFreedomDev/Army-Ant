@@ -19,6 +19,8 @@ step.2 custom configure setting in project
        'table':'',      #default with project name
        'itag':'',       #cache ver.
        'disallow':{     #disable cache rules
+           'url': ['keyword_1','keyword_2','keyword_n'],
+           'content':[],
        },
    },
  }
