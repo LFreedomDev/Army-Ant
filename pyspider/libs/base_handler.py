@@ -218,7 +218,7 @@ class BaseHandler(object):
         return ProcessorResult(result, follows, messages, logs, exception, extinfo, save)
 
     schedule_fields = ('priority', 'retries', 'exetime', 'age', 'itag', 'force_update', 'auto_recrawl', 'cancel')
-    fetch_fields = ('method', 'headers', 'user_agent', 'data', 'connect_timeout', 'timeout', 'allow_redirects', 'cookies',
+    fetch_fields = ('requestdb','method', 'headers', 'user_agent', 'data', 'connect_timeout', 'timeout', 'allow_redirects', 'cookies',
                     'proxy', 'etag', 'last_modifed', 'last_modified', 'save', 'js_run_at', 'js_script',
                     'js_viewport_width', 'js_viewport_height', 'load_images', 'fetch_type', 'use_gzip', 'validate_cert',
                     'max_redirects', 'robots_txt')
@@ -302,7 +302,6 @@ class BaseHandler(object):
                 schedule[key] = kwargs.pop(key)
             elif key in self.crawl_config:
                 schedule[key] = self.crawl_config[key]
-
         task['schedule'] = schedule
 
         fetch = {}
@@ -323,7 +322,7 @@ class BaseHandler(object):
             task['taskid'] = kwargs.pop('taskid')
         else:
             task['taskid'] = self.get_taskid(task)
-
+        
         if kwargs:
             raise TypeError('crawl() got unexpected keyword argument: %s' % kwargs.keys())
 
@@ -334,6 +333,7 @@ class BaseHandler(object):
         if cache_key not in self._follows_keys:
             self._follows_keys.add(cache_key)
             self._follows.append(task)
+
         return task
 
     def get_taskid(self, task):

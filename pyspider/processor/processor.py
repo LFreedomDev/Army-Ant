@@ -174,6 +174,7 @@ class Processor(object):
             for each in (ret.follows[x:x + 1000] for x in range(0, len(ret.follows), 1000)):
                 self.newtask_queue.put([utils.unicode_obj(newtask) for newtask in each])
 
+                
         for project, msg, url in ret.messages:
             try:
                 self.on_task({
@@ -200,6 +201,7 @@ class Processor(object):
             task['project'], task['taskid'],
             task.get('url'), response.status_code, len(response.content),
             ret.result, len(ret.follows), len(ret.messages), ret.exception))
+
         return True
 
     def quit(self):

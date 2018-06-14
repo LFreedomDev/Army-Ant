@@ -56,9 +56,9 @@ def _connect_database(url):  # NOQA
         engine, dbtype = scheme[0], scheme[-1]
         other_scheme = "+".join(scheme[1:-1])
 
-    if dbtype not in ('taskdb', 'projectdb', 'resultdb'):
+    if dbtype not in ('taskdb', 'projectdb', 'resultdb','requestdb'):
         raise LookupError('unknown database type: %s, '
-                          'type should be one of ["taskdb", "projectdb", "resultdb"]', dbtype)
+                          'type should be one of ["taskdb", "projectdb", "resultdb","requestdb"]', dbtype)
 
     if engine == 'mysql':
         return _connect_mysql(parsed,dbtype)
@@ -157,6 +157,9 @@ def _connect_mongodb(parsed,dbtype,url):
     elif dbtype == 'resultdb':
         from .mongodb.resultdb import ResultDB
         return ResultDB(url, **parames)
+    elif dbtype == 'requestdb':
+        from .mongodb.requestdb import RequestDB
+        return RequestDB(url, **parames)
     else:
         raise LookupError
 

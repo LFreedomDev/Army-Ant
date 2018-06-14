@@ -73,6 +73,8 @@ def connect_rpc(ctx, param, value):
               help='database url for projectdb, default: sqlite')
 @click.option('--resultdb', envvar='RESULTDB', callback=connect_db,
               help='database url for resultdb, default: sqlite')
+@click.option('--requestdb', envvar='REQUESTDB', callback=connect_db,
+              help='database url for resultdb, default: sqlite')
 @click.option('--message-queue', envvar='AMQP_URL',
               help='connection url to message queue, '
               'default: builtin multiprocessing.Queue')
@@ -97,7 +99,7 @@ def cli(ctx, **kwargs):
     logging.config.fileConfig(kwargs['logging_config'])
 
     # get db from env
-    for db in ('taskdb', 'projectdb', 'resultdb'):
+    for db in ('taskdb', 'projectdb', 'resultdb','requestdb'):
         if kwargs[db] is not None:
             continue
         if os.environ.get('MYSQL_NAME'):
@@ -161,8 +163,9 @@ def cli(ctx, **kwargs):
     ctx.obj['instances'] = []
     ctx.obj.update(kwargs)
 
+    all_config = ctx.obj.config.get('all', {})
     if ctx.invoked_subcommand is None and not ctx.obj.get('testing_mode'):
-        ctx.invoke(all)
+        ctx.invoke(all,**all_config)
     return ctx
 
 
@@ -242,7 +245,7 @@ def fetcher(ctx, xmlrpc, xmlrpc_host, xmlrpc_port, poolsize, proxy, user_agent,
         inqueue = g.scheduler2fetcher
         outqueue = g.fetcher2processor
     fetcher = Fetcher(inqueue=inqueue, outqueue=outqueue,
-                      poolsize=poolsize, proxy=proxy, async=async)
+                      poolsize=poolsize, proxy=proxy, async=async,requestdb=g.requestdb)
     fetcher.phantomjs_proxy = phantomjs_endpoint or g.phantomjs_proxy
     fetcher.splash_endpoint = splash_endpoint
     if user_agent:
@@ -447,6 +450,13 @@ def all(ctx, fetcher_num, processor_num, result_worker_num, run_in):
     """
     Run all the components in subprocess or thread
     """
+    print ('================================================')
+    print ('================================================')
+    print ('==fetcher_num:'+str(fetcher_num)+'==============')
+    print ('==processor_num:'+str(processor_num)+'==========')
+    print ('==result_worker_num:'+str(result_worker_num)+'==')
+    print ('================================================')
+    print ('================================================')
 
     ctx.obj['debug'] = False
     g = ctx.obj

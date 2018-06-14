@@ -64,7 +64,7 @@ fetcher_output = {
 
 
 class Fetcher(object):
-    user_agent = "pyspider/%s (+http://pyspider.org/)" % pyspider.__version__
+    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/535.36 (KHTML, like Gecko) Chrome/54.0.3359.181 Safari/537.36' #"pyspider/%s (+http://pyspider.org/)" % pyspider.__version__
     default_options = {
         'method': 'GET',
         'headers': {
@@ -78,7 +78,9 @@ class Fetcher(object):
     splash_lua_source = open(os.path.join(os.path.dirname(__file__), "splash_fetcher.lua")).read()
     robot_txt_age = 60*60  # 1h
 
-    def __init__(self, inqueue, outqueue, poolsize=100, proxy=None, async=True):
+    def __init__(self,inqueue, outqueue, poolsize=100, proxy=None, async=True,requestdb=None):
+        self.requestdb = requestdb
+
         self.inqueue = inqueue
         self.outqueue = outqueue
 
@@ -123,30 +125,44 @@ class Fetcher(object):
     def async_fetch(self, task, callback=None):
         '''Do one fetch'''
         url = task.get('url', 'data:,')
+
+
         if callback is None:
             callback = self.send_result
 
+        cache_res = None
+        if self.requestdb!=None:
+            cache_res = self.requestdb.get(task)
+
         type = 'None'
         start_time = time.time()
-        try:
-            if url.startswith('data:'):
-                type = 'data'
-                result = yield gen.maybe_future(self.data_fetch(url, task))
-            elif task.get('fetch', {}).get('fetch_type') in ('js', 'phantomjs'):
-                type = 'phantomjs'
-                result = yield self.phantomjs_fetch(url, task)
-            elif task.get('fetch', {}).get('fetch_type') in ('splash', ):
-                type = 'splash'
-                result = yield self.splash_fetch(url, task)
-            else:
-                type = 'http'
-                result = yield self.http_fetch(url, task)
-        except Exception as e:
-            logger.exception(e)
-            result = self.handle_error(type, url, task, start_time, e)
+
+        if cache_res == None:
+            try:
+                if url.startswith('data:'):
+                    type = 'data'
+                    result = yield gen.maybe_future(self.data_fetch(url, task))
+                elif task.get('fetch', {}).get('fetch_type') in ('js', 'phantomjs'):
+                    type = 'phantomjs'
+                    result = yield self.phantomjs_fetch(url, task)
+                elif task.get('fetch', {}).get('fetch_type') in ('splash', ):
+                    type = 'splash'
+                    result = yield self.splash_fetch(url, task)
+                else:
+                    type = 'http'
+                    result = yield self.http_fetch(url, task)
+                if result.get('status_code')!=599 and self.requestdb!=None:
+                    self.requestdb.save(task,result)
+            except Exception as e:
+                logger.exception(e)
+                result = self.handle_error(type, url, task, start_time, e)
+        else:
+            result = cache_res['result']
 
         callback(type, task, result)
+
         self.on_result(type, task, result)
+
         raise gen.Return(result)
 
     def sync_fetch(self, task):
@@ -193,7 +209,6 @@ class Fetcher(object):
                 result['content'][:70],
                 len(result['content'])
             )
-
         return result
 
     def handle_error(self, type, url, task, start_time, error):
@@ -737,3 +752,5 @@ class Fetcher(object):
                                   float(content_len) / result.get('time'))
             self._cnt['5m'].event((task.get('project'), 'time'), result.get('time'))
             self._cnt['1h'].event((task.get('project'), 'time'), result.get('time'))
+
+

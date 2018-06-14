@@ -1,0 +1,32 @@
+{ 
+    "taskdb": "mongodb+taskdb://spider:spider@mongo_m:27017/sp_taskdb", 
+    "projectdb": "mongodb+projectdb://spider:spider@mongo_m:27017/sp_projectdb",
+    "resultdb": "mongodb+resultdb://spider:spider@mongo_m:27017/sp_resultdb",
+    "requestdb": "mongodb+requestdb://spider:spider@mongo_m:27017/sp_requestdb",
+    "message_queue": "amqp://spider:spider@rabbitmq_m:5672/%2F",
+    "queue_maxsize": 400,
+    "all":{
+        "result_worker_num": 8,
+        "fetcher_num": 8,
+        "processor_num": 8
+    },
+    "scheduler":{
+        "fail_pause_num":100,
+        "active_tasks":400,
+        "threads":8
+    },
+    "fetcher":{
+        "poolsize":400,
+        "timeout":340
+    },
+    "processor":{
+    },
+    "result_worker":{
+    },
+    "webui": {
+        "port": 5000,
+        "username": "admin",
+        "password": "admin",
+        "need-auth": true
+    }
+}
