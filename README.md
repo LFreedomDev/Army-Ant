@@ -4,7 +4,7 @@ pyspider
 base binux/pyspider
 
 1.add request cache
-
+```python
  crawl_config = {
    'requestdb':{
        'table':'bookdao', #储存表
@@ -14,3 +14,4 @@ base binux/pyspider
        },
    },
  }
+```
