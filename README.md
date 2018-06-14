@@ -2,15 +2,23 @@ pyspider
 ========
 
 base binux/pyspider
+add request cache(only for mongo)
+add multi lang.
 
-1.add request cache
+step.1 configure requestdb connection string and auto turn on request cache
+```json
+{ 
+    "requestdb": "mongodb+requestdb://host/requestdb",
+}
+```
+
+step.2 custom configure setting in project
 ```python
  crawl_config = {
    'requestdb':{
-       'table':'', 
-       'itag':'',
-       'disallow':{
-           'url': [u'error.shtml']
+       'table':'',      #default with project name
+       'itag':'',       #cache ver.
+       'disallow':{     #disable cache rules
        },
    },
  }
