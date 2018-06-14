@@ -2,8 +2,14 @@ pyspider
 ========
 
 base binux/pyspider
-add request cache(only for mongo)
-add multi lang.
+
+#### Appends
+
+1.request cache(only for mongo)
+
+2.multi lang.
+
+#### Usage
 
 step.1 configure requestdb connection string and auto turn on request cache
 ```json
