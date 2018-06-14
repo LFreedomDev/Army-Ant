@@ -7,9 +7,9 @@ base binux/pyspider
 ```python
  crawl_config = {
    'requestdb':{
-       'table':'bookdao', #储存表
-       'itag':'',     #更新缓存版本
-       'disallow':{    #禁用缓存关键词匹配
+       'table':'', 
+       'itag':'',
+       'disallow':{
            'url': [u'error.shtml']
        },
    },
