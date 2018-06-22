@@ -24,6 +24,7 @@ step.2 custom configure setting in project
    'requestdb':{
        'table':'',      #default with project name
        'itag':'',       #cache ver.
+       'force':False,   #fetch by cache,default False
        'disallow':{     #disable cache rules
            'url': ['keyword_1','keyword_2','keyword_n'],
            'content':[],

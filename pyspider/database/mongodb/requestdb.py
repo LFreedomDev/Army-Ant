@@ -130,6 +130,12 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
     def _get_requestdb_itag(self,task):
         return str(task.get('fetch',{}).get('requestdb',{}).get('itag',''))
 
+    def _get_requestdb_force(self,task):
+        return str(task.get('fetch',{}).get('requestdb',{}).get('force',False))
+
+    def _get_requestdb_save(self,task):
+        return str(task.get('fetch',{}).get('requestdb',{}).get('save',None))
+
     def get_table_name(self,task):
         return self._get_custom_collection_name(task)
 
@@ -147,6 +153,30 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
                 return cache_res
             else:
                 logger.info("cache_expired %s itag_c_n:[%s:%s] %s => %s",table_name,cache_itag,task_itag,cache_res['result']['status_code'],url)
+        if self._get_requestdb_force(task):
+            cache_res = {
+                "taskid":task.get('taskid'),
+                "update_project":task.get('project'),
+                "url":task.get('url'),
+                "result":{},
+                "itag":self._get_requestdb_itag(task),
+                "update_time": time.time(),
+            }
+
+            result = {}
+            result['orig_url'] = url
+            result['content'] = None
+            result['headers'] = None
+            result['status_code'] = 404
+            result['url'] = url
+            result['time'] = None
+            result['cookies'] = None
+            result['save'] = self._get_requestdb_save(task)
+            result['error'] = "requestdb not found"
+
+            cache_res['result'] = result
+            
+            return cache_res
         return None
 
     def save(self,task,result):
