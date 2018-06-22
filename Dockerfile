@@ -15,12 +15,16 @@ RUN mkdir -p /opt/phantomjs \
 COPY requirements.txt /opt/pyspider/requirements.txt
 RUN pip install -r /opt/pyspider/requirements.txt
 
+
 # add all repo
 ADD ./ /opt/pyspider
 
 # run test
 WORKDIR /opt/pyspider
 RUN pip install -e .[all]
+
+RUN pip uninstall -y elasticsearch
+RUN pip install elasticsearch
 
 VOLUME ["/opt/pyspider"]
 ENTRYPOINT ["pyspider"]
