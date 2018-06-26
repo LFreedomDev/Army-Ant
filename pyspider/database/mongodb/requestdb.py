@@ -140,6 +140,7 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
         return self._get_custom_collection_name(task)
 
     def get(self,task,fields=None):
+        start_time = time.time()
         url = task.get('url', 'data:,')
         if url.startswith('data:'):
             return
@@ -150,10 +151,12 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
             cache_itag = str(cache_res.get('itag',''))
             if task_itag == cache_itag:   
                 logger.info("cache_fetch %s itag_c_n:[%s:%s] %s => %s",table_name,cache_itag,task_itag,cache_res['result']['status_code'],url)
+                cache_res['result']['time'] = time.time() - start_time
                 return cache_res
             else:
                 logger.info("cache_expired %s itag_c_n:[%s:%s] %s => %s",table_name,cache_itag,task_itag,cache_res['result']['status_code'],url)
-        if self._get_requestdb_force(task):
+        
+        if cache_res==None and self._get_requestdb_force(task)==True:
             cache_res = {
                 "taskid":task.get('taskid'),
                 "update_project":task.get('project'),
@@ -162,17 +165,16 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
                 "itag":self._get_requestdb_itag(task),
                 "update_time": time.time(),
             }
-
             result = {}
             result['orig_url'] = url
             result['content'] = None
             result['headers'] = None
             result['status_code'] = 404
             result['url'] = url
-            result['time'] = None
+            result['time'] = time.time() - start_time
             result['cookies'] = None
             result['save'] = self._get_requestdb_save(task)
-            result['error'] = "requestdb not found"
+            result['error'] = "not found by requestdb"
 
             cache_res['result'] = result
             

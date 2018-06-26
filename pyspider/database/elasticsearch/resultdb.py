@@ -12,6 +12,8 @@ import elasticsearch.helpers
 from elasticsearch import Elasticsearch
 from pyspider.database.base.resultdb import ResultDB as BaseResultDB
 
+import logging
+logger = logging.getLogger('resultdb')
 
 class ResultDB(BaseResultDB):
     __type__ = 'result'
@@ -21,8 +23,9 @@ class ResultDB(BaseResultDB):
         self.es = Elasticsearch(hosts=hosts)
 
         self.es.indices.create(index=self.index, ignore=400)
-        if not self.es.indices.get_mapping(index=self.index, doc_type=self.__type__):
-            self.es.indices.put_mapping(index=self.index, doc_type=self.__type__, body={
+        _map = self.es.indices.get_mapping(index=self.index, doc_type=self.__type__, ignore=404)
+        if _map.get(u'status',404) == 404:
+            _map = self.es.indices.put_mapping(index=self.index, doc_type=self.__type__, body={
                 "_all": {"enabled": True},
                 "properties": {
                     "taskid": {"enabled": False},
@@ -30,6 +33,8 @@ class ResultDB(BaseResultDB):
                     "url": {"enabled": False},
                 }
             })
+            logger.info("索引映射创建完成")
+            logger.info(_map)
 
     @property
     def projects(self):

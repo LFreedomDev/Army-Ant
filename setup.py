@@ -57,7 +57,8 @@ extras_require_all = [
     'redis',
     'redis-py-cluster',
     'psycopg2',
-    'elasticsearch>=2.0.0,<2.4.0',
+    #'elasticsearch>=2.0.0,<2.4.0',
+    'elasticsearch>=2.0.0,<=6.3.0',
 ]
 if sys.version_info < (2, 7):  # 2.6
     extras_require_all.extend([
@@ -71,6 +72,7 @@ elif sys.version_info >= (3, 0):  # 3.*
     extras_require_all.extend([
         'kombu',
         'amqp>=2.1.1',
+        'amqp>=2.1.4',
         'SQLAlchemy>=0.9.7',
     ])
 else:  # 2.7
@@ -79,6 +81,7 @@ else:  # 2.7
         'pika>=0.9.14',
         'beanstalkc',
         'amqp>=1.3.0',
+        'amqp>=2.1.4',
         'SQLAlchemy>=0.9.7',
     ])
 

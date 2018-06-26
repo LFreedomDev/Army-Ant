@@ -456,3 +456,25 @@ class BaseHandler(object):
                 self.save[each] = self.retry_delay
             elif each == 'crawl_config':
                 self.save[each] = self.crawl_config
+
+    @staticmethod
+    def update_status(project_name,status):
+        if not self.is_debugger():
+            return 'not debug mode', 500
+        from pyspider.webui.app import app
+        projectdb = app.config['projectdb']
+        update = {
+            'status': status
+        }
+        ret = projectdb.update(project_name, update)
+        if ret:
+            rpc = app.config['scheduler_rpc']
+            if rpc is not None:
+                try:
+                    rpc.update_project()
+                except socket.error as e:
+                    app.logger.warning('connect to scheduler rpc error: %r', e)
+                    return 'rpc error', 200
+            return 'ok', 200
+        else:
+            return 'update error', 500

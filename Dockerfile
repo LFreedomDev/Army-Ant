@@ -23,8 +23,8 @@ ADD ./ /opt/pyspider
 WORKDIR /opt/pyspider
 RUN pip install -e .[all]
 
-RUN pip uninstall -y elasticsearch
-RUN pip install elasticsearch
+#RUN pip uninstall -y elasticsearch
+#RUN pip install elasticsearch
 
 VOLUME ["/opt/pyspider"]
 ENTRYPOINT ["pyspider"]
