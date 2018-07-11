@@ -13,15 +13,14 @@ RUN mkdir -p /opt/phantomjs \
 # install requirements
 #RUN pip install --egg 'https://dev.mysql.com/get/Downloads/Connector-Python/mysql-connector-python-2.1.5.zip#md5=ce4a24cb1746c1c8f6189a97087f21c1'
 COPY requirements.txt /opt/pyspider/requirements.txt
-RUN pip install -r /opt/pyspider/requirements.txt
-
+RUN pip install -i https://mirrors.aliyun.com/pypi/simple -r /opt/pyspider/requirements.txt
 
 # add all repo
 ADD ./ /opt/pyspider
 
 # run test
 WORKDIR /opt/pyspider
-RUN pip install -e .[all]
+RUN pip install -i https://mirrors.aliyun.com/pypi/simple -e .[all]
 
 #RUN pip uninstall -y elasticsearch
 #RUN pip install elasticsearch

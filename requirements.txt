@@ -23,3 +23,7 @@ kombu
 psycopg2
 elasticsearch==6.3.0
 tblib
+pytz
+isbntools
+isbnid
+isbnlib
