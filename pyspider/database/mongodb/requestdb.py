@@ -105,7 +105,7 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
 
     def _check(self,task,result):
         for dis_key in self._get_disallow(task):
-            if result.has_key(dis_key):
+            if dis_key in result:
                 for keyword in self._get_disallow(task)[dis_key]:
                     if type(result[dis_key]) == type(u''):
                         if result[dis_key].find(keyword)>-1:

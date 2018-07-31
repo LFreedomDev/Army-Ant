@@ -26,15 +26,22 @@ class ResultDB(BaseResultDB):
         _map = self.es.indices.get_mapping(index=self.index, doc_type=self.__type__, ignore=404)
         if _map.get(u'status',404) == 404:
             _map = self.es.indices.put_mapping(index=self.index, doc_type=self.__type__, body={
-                "_all": {"enabled": True},
+                #"_all": {"enabled": True},
                 "properties": {
-                    "taskid": {"enabled": False},
-                    "project": {"type": "string", "index": "not_analyzed"},
-                    "url": {"enabled": False},
+                    "taskid": {
+                        "enabled": False
+                    },
+                    "project": {
+                        "type": "text", 
+                    },
+                    "url": {
+                        "enabled": False
+                    },
                 }
             })
             logger.info("索引映射创建完成")
             logger.info(_map)
+
 
     @property
     def projects(self):
@@ -67,15 +74,18 @@ class ResultDB(BaseResultDB):
         else:
             for record in self.es.search(index=self.index, doc_type=self.__type__,
                                          body={'query': {'term': {'project': project}}},
+                                         #q="project:"+project,
                                          _source_include=fields or [], from_=offset, size=limit,
                                          sort="updatetime:desc"
                                          ).get('hits', {}).get('hits', []):
                 yield record['_source']
 
+
     def count(self, project):
         return self.es.count(index=self.index, doc_type=self.__type__,
-                             body={'query': {'term': {'project': project}}}
-                             ).get('count', 0)
+            #body={'query': {'term': {'project': project}}} 
+            q="project:"+project
+            ).get('count', 0)
 
     def get(self, project, taskid, fields=None):
         ret = self.es.get(index=self.index, doc_type=self.__type__, id="%s:%s" % (project, taskid),
