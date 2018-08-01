@@ -20,21 +20,21 @@ RUN mkdir -p /opt/phantomjs \
 #        && make \
 #        && make install
 
-#RUN mv /etc/apt/sources.list /etc/apt/sources.list.back \
-#		&& echo "deb http://mirrors.163.com/debian jessie main non-free contrib \
-#deb http://mirrors.163.com/debian jessie-proposed-updates main contrib non-free \
-#deb http://mirrors.163.com/debian-security jessie/updates main contrib non-free \
-#deb-src http://mirrors.163.com/debian jessie main non-free contrib \
-#	" > /etc/apt/sources.list \
-#		&& apt-get update -y \
-#		&& apt-get autoremove \
-#		&& apt-get autoclean \
-#		&& apt-get dist-upgrade \
-#		&& apt-get upgrade \
-#		&& apt-get autoremove freetds* --purge \
-#		&& apt-get remove apparmor \
-#		&& apt-get install -y freetds-bin freetds-common freetds-dev  --fix-missing --fix-broken \
-#		&& apt-get install -y unixodbc unixodbc-dev
+RUN mv /etc/apt/sources.list /etc/apt/sources.list.back \
+		&& echo "deb http://mirrors.163.com/debian jessie main non-free contrib \
+deb http://mirrors.163.com/debian jessie-proposed-updates main contrib non-free \
+deb http://mirrors.163.com/debian-security jessie/updates main contrib non-free \
+deb-src http://mirrors.163.com/debian jessie main non-free contrib \
+	" > /etc/apt/sources.list \
+		&& apt-get update -y \
+		&& apt-get autoremove \
+		&& apt-get autoclean \
+		&& apt-get dist-upgrade \
+		&& apt-get upgrade \
+		&& apt-get autoremove freetds* --purge \
+		&& apt-get remove apparmor \
+		&& apt-get install -y freetds-bin freetds-common freetds-dev  --fix-missing --fix-broken \
+		&& apt-get install -y unixodbc unixodbc-dev
 
 
 # install requirements
@@ -56,3 +56,6 @@ VOLUME ["/opt/pyspider"]
 ENTRYPOINT ["pyspider"]
 
 EXPOSE 5000 23333 24444 25555
+
+
+

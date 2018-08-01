@@ -11,13 +11,15 @@ import time
 import json
 import sqlalchemy.exc
 
-from sqlalchemy import (create_engine, MetaData, Table, Column,
+from sqlalchemy import (create_engine, MetaData, Table, Column,Text,
                         String, Float, LargeBinary)
 from sqlalchemy.engine.url import make_url
 from pyspider.database.base.resultdb import ResultDB as BaseResultDB
 from pyspider.libs import utils
 from .sqlalchemybase import SplitTableMixin, result2dict
 
+import logging
+logger = logging.getLogger('resultdb')
 
 class ResultDB(SplitTableMixin, BaseResultDB):
     __tablename__ = ''
@@ -26,7 +28,7 @@ class ResultDB(SplitTableMixin, BaseResultDB):
         self.table = Table('__tablename__', MetaData(),
                            Column('taskid', String(64), primary_key=True, nullable=False),
                            Column('url', String(1024)),
-                           Column('result', LargeBinary),
+                           Column('result', String()),
                            Column('updatetime', Float(32)),
                            mysql_engine='InnoDB',
                            mysql_charset='utf8'
@@ -44,10 +46,13 @@ class ResultDB(SplitTableMixin, BaseResultDB):
             except sqlalchemy.exc.SQLAlchemyError:
                 pass
             self.url.database = database
+
         self.engine = create_engine(url, convert_unicode=True,
                                     pool_recycle=3600)
 
         self._list_project()
+
+
 
     def _create_project(self, project):
         assert re.match(r'^\w+$', project) is not None
@@ -62,15 +67,16 @@ class ResultDB(SplitTableMixin, BaseResultDB):
             if isinstance(value, six.binary_type):
                 data[key] = utils.text(value)
         if 'result' in data:
-            if isinstance(data['result'], bytearray):
-                data['result'] = str(data['result'])
+            #if isinstance(data['result'], bytearray):
+            #    data['result'] = str(data['result'])
             data['result'] = json.loads(data['result'])
         return data
 
     @staticmethod
     def _stringify(data):
         if 'result' in data:
-            data['result'] = utils.utf8(json.dumps(data['result']))
+            #data['result'] = utils.utf8(json.dumps(data['result']))
+            data['result'] = json.dumps(data['result'],ensure_ascii=False)#解决插入数据库中文是unicode编码问题
         return data
 
     def save(self, project, taskid, url, result):
@@ -78,12 +84,14 @@ class ResultDB(SplitTableMixin, BaseResultDB):
             self._create_project(project)
             self._list_project()
         self.table.name = self._tablename(project)
+
         obj = {
             'taskid': taskid,
             'url': url,
             'result': result,
             'updatetime': time.time(),
         }
+        
         if self.get(project, taskid, ('taskid', )):
             del obj['taskid']
             return self.engine.execute(self.table.update()
@@ -101,11 +109,13 @@ class ResultDB(SplitTableMixin, BaseResultDB):
         self.table.name = self._tablename(project)
 
         columns = [getattr(self.table.c, f, f) for f in fields] if fields else self.table.c
+
         for task in self.engine.execute(self.table.select()
                                         .with_only_columns(columns=columns)
                                         .order_by(self.table.c.updatetime.desc())
                                         .offset(offset).limit(limit)
-                                        .execution_options(autocommit=True)):
+                                        #.execution_options(autocommit=True)
+                                        ):
             yield self._parse(result2dict(columns, task))
 
     def count(self, project):

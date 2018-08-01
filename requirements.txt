@@ -27,5 +27,6 @@ pymongo>=2.7.2
 mysql-connector-python>=1.2.2
 Cython
 pyodbc
+pymssql
 SQLAlchemy>=0.9.7
 elasticsearch==6.3.0
