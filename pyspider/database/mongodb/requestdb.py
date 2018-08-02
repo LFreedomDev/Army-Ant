@@ -15,6 +15,19 @@ from .mongodbbase import SplitTableMixin
 
 logger = logging.getLogger('requestdb')
 
+'''
+配置
+     'requestdb':{
+           'table':string,      #存储表头
+           'get':bool,          #启用获取缓存，缓存为空就重新爬取
+           'force_get':bool,    #强制获取缓存，缓存为空不重新爬取
+           'save':bool,         #是否保存到缓存
+           'itag':int,          #缓存版本
+           'disallow':{         #禁用缓存规则，response 各项字段
+                'status_code':[503,502,501,500]        
+           }
+       },   
+'''
 class RequestDB(SplitTableMixin, BaseRequestDB):
     collection_prefix = ''
 
@@ -59,7 +72,7 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
 
         taskid = task.get('taskid')
         itag = self._get_requestdb_cfg_itag(task)
-        
+
         collection_name = self._get_requestdb_cfg_tablename(task)
 
         ret = self.database[collection_name].find_one({'taskid': taskid}, fields)
