@@ -487,7 +487,7 @@ window.Debugger = (function() {
           $('#left-area .overlay').hide();
 
           //web
-          $("#tab-web .iframe-box").html('<iframe src="/blank.html" sandbox="allow-same-origin allow-scripts" height="50%"></iframe>');
+          $("#tab-web .iframe-box").html('<iframe src="/blank.html" sandbox="allow-same-origin allow-scripts" style="height:30vh;"></iframe>');
           const iframe = $("#tab-web iframe")[0];
           const content_type = data.fetch_result.headers && data.fetch_result.headers['Content-Type'] && data.fetch_result.headers['Content-Type'] || "text/plain";
 

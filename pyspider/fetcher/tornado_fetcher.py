@@ -126,14 +126,13 @@ class Fetcher(object):
         '''Do one fetch'''
         url = task.get('url', 'data:,')
 
-
         if callback is None:
             callback = self.send_result
 
         cache_res = None
         if self.requestdb!=None:
             cache_res = self.requestdb.get(task)
-
+            
         type = 'None'
         start_time = time.time()
 
@@ -151,8 +150,10 @@ class Fetcher(object):
                 else:
                     type = 'http'
                     result = yield self.http_fetch(url, task)
+
                 if result.get('status_code')!=599 and self.requestdb!=None:
                     self.requestdb.save(task,result)
+
             except Exception as e:
                 logger.exception(e)
                 result = self.handle_error(type, url, task, start_time, e)
