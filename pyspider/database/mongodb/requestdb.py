@@ -162,7 +162,12 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
                 cache_res['result']['time'] = time.time() - start_time
                 return cache_res
             else:
-                logger.info("cache_expired %s itag_c_n:[%s:%s] %s => %s",table_name,cache_itag,task_itag,cache_res['result']['status_code'],url)
+                if force_get == True:
+                    logger.warn("cache_expired %s itag_c_n:[%s:%s] %s => %s",table_name,cache_itag,task_itag,cache_res['result']['status_code'],url)
+                    return cache_res
+                else:
+                    logger.info("cache_expired %s itag_c_n:[%s:%s] %s => %s",table_name,cache_itag,task_itag,cache_res['result']['status_code'],url)
+
         
         if cache_res==None and force_get==True:
             cache_res = {
