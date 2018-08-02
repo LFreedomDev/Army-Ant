@@ -28,7 +28,7 @@ step.2 custom configure setting in project
            'save':bool,         #是否保存到缓存
            'itag':int,          #缓存版本
            'disallow':{         #禁用缓存规则，response 各项字段
-                'status_code':[503,502,501,500]        
+                'status_code':[503,502,501,500,404,401]        
            }
        },   
  }
