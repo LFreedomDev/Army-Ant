@@ -15,6 +15,22 @@ $(function() {
   //});
 
   function init_editable(projects_app) {
+
+    $(".project-comments>span").editable({
+      name: 'comments',
+      pk: function(e) {
+        return $(this).parents('tr').data("name");
+      },
+      emptytext: '[comments]',
+      placement: 'right',
+      url: "/update",
+      success: function(response, value) {
+        var project_name = $(this).parents('tr').data("name");
+        projects_app.projects[project_name].comments = value;
+        $(this).attr('style', '');
+      }
+    });
+
     $(".project-group>span").editable({
       name: 'group',
       pk: function(e) {

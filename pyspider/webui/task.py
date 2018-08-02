@@ -11,6 +11,8 @@ from flask import abort, render_template, request, json
 from pyspider.libs import utils
 from .app import app
 
+import logging
+logger = logging.getLogger('web.task')
 
 @app.route('/task/<taskid>')
 def task(taskid):
@@ -62,9 +64,11 @@ def tasks():
 
     tasks = {}
     result = []
+
     for updatetime, task in sorted(updatetime_tasks, key=lambda x: x[0]):
         key = '%(project)s:%(taskid)s' % task
         task['updatetime'] = updatetime
+        
         if key in tasks and tasks[key].get('status', None) != taskdb.ACTIVE:
             result.append(tasks[key])
         tasks[key] = task

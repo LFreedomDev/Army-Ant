@@ -6,13 +6,13 @@
 
 import json
 import time
-import logging
 
 from pymongo import MongoClient
 
 from pyspider.database.base.requestdb import RequestDB as BaseRequestDB
 from .mongodbbase import SplitTableMixin
 
+import logging
 logger = logging.getLogger('requestdb')
 
 '''
@@ -135,7 +135,7 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
     def _get_requestdb_cfg_force_get(self,task):
         return task.get('fetch',{}).get('requestdb',{}).get('force_get',False)
     def _get_requestdb_cfg_enable_get(self,task):
-        return task.get('fetch',{}).get('requestdb',{}).get('get',True)
+        return task.get('fetch',{}).get('requestdb',{}).get('get',False)
     def _get_requestdb_cfg_enable_save(self,task):
         return task.get('fetch',{}).get('requestdb',{}).get('save',True)  
 

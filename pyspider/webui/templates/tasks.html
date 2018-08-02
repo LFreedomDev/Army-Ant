@@ -20,6 +20,8 @@
     <ol class=tasks>
       {% for task in tasks | sort(reverse=True, attribute='updatetime') %}
       <li class=task>
+        <span class="status status-{{ task.status }}">{{ task.get("track",{}).get("fetch",{}).get("status_code","-----") }}</span>
+
         {% if task.status %}
           <span class="status status-{{ task.status }}">{{ status_to_string(task.status) }}</span>
         {% elif task.track %}
@@ -33,12 +35,12 @@
           {%- endif -%}
         </span>
         {% else %}
-          <span class="status status-4 }}">ERROR</span>
+          <span class="status status-3">ERROR</span>
         {% endif %}
 
-        <a class=callback href="/debug/{{ task.project }}?taskid={{ task.taskid }}" target=_blank>{{ task.project }}</a>
+        <a class="status status-5" href="/debug/{{ task.project }}?taskid={{ task.taskid }}" target=_blank>{{ task.project }}</a>
         &gt;
-        <a class=url href="/task/{{ task.project }}:{{ task.taskid }}" title="{{ task.url }}" target=_blank>{{ task.url }}</a>
+        <a class= href="/task/{{ task.project }}:{{ task.taskid }}" title="{{ task.url }}" target=_blank>{{ task.url }}</a>
 
         <span class=update-time>{{ task.updatetime | format_date }}</span>
 
@@ -53,6 +55,7 @@
         +{{ task.track.process.follows | int }}
         {% endif %}
         </span>
+
       </li>
       {% endfor %}
     </ol>

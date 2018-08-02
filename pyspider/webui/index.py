@@ -59,7 +59,7 @@ def project_update():
             and not login.current_user.is_active():
         return app.login_response
 
-    if name not in ('group', 'status', 'rate'):
+    if name not in ('comments','group', 'status', 'rate'):
         return 'unknown field: %s' % name, 400
     if name == 'rate':
         value = value.split('/')
