@@ -55,7 +55,7 @@ class ResultDB(MySQLMixin, SplitTableMixin, BaseResultDB, BaseDB):
             data['result'] = json.dumps(data['result'])
         return data
 
-    def save(self, project, taskid, url, result):
+    def save(self, project, taskid, url, result, task):
         tablename = self._tablename(project)
         if project not in self.projects:
             self._create_project(project)

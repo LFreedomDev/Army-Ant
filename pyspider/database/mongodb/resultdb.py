@@ -47,7 +47,7 @@ class ResultDB(SplitTableMixin, BaseResultDB):
             data['result'] = json.dumps(data['result'])
         return data
 
-    def save(self, project, taskid, url, result):
+    def save(self, project, taskid, url, result, task):
         if project not in self.projects:
             self._create_project(project)
         collection_name = self._collection_name(project)

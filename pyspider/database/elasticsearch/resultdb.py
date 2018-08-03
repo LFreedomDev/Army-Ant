@@ -39,8 +39,6 @@ class ResultDB(BaseResultDB):
                     },
                 }
             })
-            logger.info("索引映射创建完成")
-            logger.info(_map)
 
 
     @property
@@ -51,7 +49,7 @@ class ResultDB(BaseResultDB):
                              }}}, _source=False)
         return [each['key'] for each in ret['aggregations']['projects'].get('buckets', [])]
 
-    def save(self, project, taskid, url, result):
+    def save(self, project, taskid, url, result, task):
         obj = {
             'taskid': taskid,
             'project': project,

@@ -26,6 +26,9 @@ logger = logging.getLogger('requestdb')
            'disallow':{         #禁用缓存规则，response 各项字段
                 'status_code':[503,502,501,500]        
            }
+           'allow':{            #允许缓存规则，response 各项字段
+                'status_code':[200]        
+           }
        },   
 '''
 class RequestDB(SplitTableMixin, BaseRequestDB):
@@ -117,7 +120,15 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
                     if type(result[dis_key]) == type({}):
                         if json.dumps(result[dis_key]).find(keyword)>-1:
                             return False
-        return True
+        res = True
+        for allow_key in self._get_requestdb_cfg_allow(task):
+            if res:
+                if allow_key in result: 
+                    res = result[allow_key] in self._get_requestdb_cfg_allow(task)[allow_key]
+                else:
+                    res = False
+
+        return res
 
 
     def _get_requestdb_cfg_tablename(self,task):
@@ -130,6 +141,8 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
 
     def _get_requestdb_cfg_itag(self,task):
         return str(task.get('fetch',{}).get('requestdb',{}).get('itag',''))
+    def _get_requestdb_cfg_allow(self,task):
+        return task.get('fetch',{}).get('requestdb',{}).get('allow',{})        
     def _get_requestdb_cfg_disallow(self,task):
         return task.get('fetch',{}).get('requestdb',{}).get('disallow',{})
     def _get_requestdb_cfg_force_get(self,task):

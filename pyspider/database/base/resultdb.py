@@ -23,7 +23,7 @@ class ResultDB(object):
     """
     projects = set()  # projects in resultdb
 
-    def save(self, project, taskid, url, result):
+    def save(self, project, taskid, url, result, task):
         raise NotImplementedError
 
     def select(self, project, fields=None, offset=0, limit=None):
