@@ -40,7 +40,7 @@
         {% endif %}
 
         <a class="status status-5" href="/debug/{{ task.project }}?taskid={{ task.taskid }}" target=_blank>{{ task.project }}</a>
-        &gt;
+        <span class="padding:0 15px;">&gt;</span>
         <a href="/task/{{ task.project }}:{{ task.taskid }}" title="{{ task.url }}" target=_blank>{{ task.url }}</a>
 
         <span class=update-time>{{ task.updatetime | format_date }}</span>

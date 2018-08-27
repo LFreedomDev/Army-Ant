@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.7
 MAINTAINER test test@test.com
 
 # install phantomjs
@@ -42,6 +42,20 @@ deb-src http://mirrors.163.com/debian jessie main non-free contrib \
 COPY requirements.txt /opt/pyspider/requirements.txt
 RUN pip3 install -i https://mirrors.aliyun.com/pypi/simple -r /opt/pyspider/requirements.txt
 
+
+
+#install chrome 
+
+RUN apt-get install -y libfontconfig fonts-liberation libappindicator3-1 libasound2 libatk-bridge2.0-0 libgtk-3-0 libnspr4 libnss3 libxtst6 lsb-release xdg-utils libxss1 libappindicator1 libindicator7 unzip  xvfb  libgconf2-4
+RUN mkdir -p /opt/chrome \
+        && cd /opt/chrome \
+        && wget -O google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+		&& dpkg -i google-chrome*.deb \
+		&& apt-get install -f \
+		&& wget -O chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/2.31/chromedriver_linux64.zip \
+		&& unzip chromedriver_linux64.zip \
+		&& ln -s /opt/chrome/chromedriver /usr/bin/chromedriver
+
 # add all repo
 ADD ./ /opt/pyspider
 
@@ -49,13 +63,10 @@ ADD ./ /opt/pyspider
 WORKDIR /opt/pyspider
 RUN pip3 install -i https://mirrors.aliyun.com/pypi/simple -e .[all]
 
-#RUN export LC_ALL=C.utf-8  
-#RUN export LANG=C.utf-8 
-
 VOLUME ["/opt/pyspider"]
 ENTRYPOINT ["pyspider"]
 
-EXPOSE 5000 23333 24444 25555
+EXPOSE 5000 23333 24444 25555 9000
 
 
 

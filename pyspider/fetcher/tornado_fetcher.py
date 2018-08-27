@@ -33,6 +33,9 @@ from tornado.simple_httpclient import SimpleAsyncHTTPClient
 from pyspider.libs import utils, dataurl, counter
 from pyspider.libs.url import quote_chinese
 from .cookie_utils import extract_cookies_to_jar
+
+from fake_useragent import UserAgent
+
 logger = logging.getLogger('fetcher')
 
 
@@ -241,6 +244,9 @@ class Fetcher(object):
                 fetch[each] = task_fetch[each]
         fetch['headers'].update(task_fetch.get('headers', {}))
 
+        if fetch['headers']['User-Agent'] == 'random':
+            fetch['headers']['User-Agent'] = UserAgent().random
+        
         if task.get('track'):
             track_headers = tornado.httputil.HTTPHeaders(
                 task.get('track', {}).get('fetch', {}).get('headers') or {})

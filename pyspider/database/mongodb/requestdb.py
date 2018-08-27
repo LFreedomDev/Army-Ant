@@ -108,11 +108,8 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
         for dis_key in self._get_requestdb_cfg_disallow(task):
             if dis_key in result:
                 for keyword in self._get_requestdb_cfg_disallow(task)[dis_key]:
-                    if type(result[dis_key]) == type(u''):
-                        if result[dis_key].find(keyword)>-1:
-                            return False
                     if type(result[dis_key]) == type(''):
-                        if result[dis_key].find(keyword.encode(encoding="UTF-8"))>-1:
+                        if result[dis_key].find(keyword)>-1:
                             return False
                     if type(result[dis_key]) == type(1):
                         if result[dis_key]==keyword:
@@ -215,8 +212,5 @@ class RequestDB(SplitTableMixin, BaseRequestDB):
             return
         cache_res = self._save(task,result)
         table_name = self._get_requestdb_cfg_tablename(task)
-        logger.info("cache_update %s async => %s => %s",table_name,url,cache_res)
-
-
-
+        logger.info("cache_update %s sync => %s => %s",table_name,url,cache_res)
 

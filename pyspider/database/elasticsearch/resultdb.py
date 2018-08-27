@@ -22,23 +22,32 @@ class ResultDB(BaseResultDB):
         self.index = index
         self.es = Elasticsearch(hosts=hosts)
 
-        self.es.indices.create(index=self.index, ignore=400)
-        _map = self.es.indices.get_mapping(index=self.index, doc_type=self.__type__, ignore=404)
-        if _map.get(u'status',404) == 404:
-            _map = self.es.indices.put_mapping(index=self.index, doc_type=self.__type__, body={
-                #"_all": {"enabled": True},
-                "properties": {
-                    "taskid": {
-                        "enabled": False
-                    },
-                    "project": {
-                        "type": "text", 
-                    },
-                    "url": {
-                        "enabled": False
-                    },
+        self.es.indices.create(index=self.index,body={
+            "settings" : {
+                "index" : {
+                    "analysis.analyzer.default.type": "ik_max_word"
                 }
-            })
+            }
+        }, ignore=400)
+        
+        logger.info("==========update settings=========")
+
+        # _map = self.es.indices.get_mapping(index=self.index, doc_type=self.__type__, ignore=404)
+        # if _map.get(u'status',404) == 404:
+        #     _map = self.es.indices.put_mapping(index=self.index, doc_type=self.__type__, body={
+        #         #"_all": {"enabled": True},
+        #         "properties": {
+        #             "taskid": {
+        #                 "type": "text", 
+        #             },
+        #             "project": {
+        #                 "type": "text", 
+        #             },
+        #             "url": {
+        #                 "type": "text", 
+        #             },
+        #         }
+        #     })
 
 
     @property

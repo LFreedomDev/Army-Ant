@@ -24,6 +24,11 @@ from pyspider.libs.response import rebuild_response
 from pyspider.processor.project_module import ProjectManager, ProjectFinder
 from .app import app
 
+
+from flask_cors import CORS
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+
 default_task = {
     'taskid': 'data:,on_start',
     'project': '',
@@ -218,3 +223,205 @@ def get_script(project):
 @app.route('/blank.html')
 def blank_html():
     return ""
+
+
+
+cors_resp_header = {
+        'Content-Type': 'application/json',
+    }
+
+@app.route('/api/debug/get/<project>', methods=['GET'])
+def api_debug_get(project):
+    projectdb = app.config['projectdb']
+    if not projectdb.verify_project_name(project):
+
+        return json.dumps({
+            'Status':3,
+            'Message':'project name is not allowed!'
+        }), 200, cors_resp_header
+
+    info = projectdb.get(project, fields=['name', 'script'])
+    if info:
+        script = info['script']
+    else:
+        script = (default_script
+                  .replace('__DATE__', datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                  .replace('__PROJECT_NAME__', project)
+                  .replace('__START_URL__', request.values.get('start-urls') or '__START_URL__'))
+
+    taskid = request.args.get('taskid')
+    if taskid:
+        taskdb = app.config['taskdb']
+        task = taskdb.get_task(
+            project, taskid, ['taskid', 'project', 'url', 'fetch', 'process'])
+    else:
+        task = default_task
+
+    default_task['project'] = project
+    return json.dumps({
+        'Status':1,
+        'Result':{
+            'task':task,
+            'script':script,
+            'project':project
+        }
+    }), 200, cors_resp_header
+
+@app.route('/api/debug/run/<project>', methods=['POST', ])
+def api_debug_run(project):
+    start_time = time.time()
+    try:
+        task = utils.decode_unicode_obj(json.loads(request.form['task']))
+    except Exception:
+        result = {
+            'fetch_result': "",
+            'logs': u'task json error',
+            'follows': [],
+            'messages': [],
+            'result': None,
+            'time': time.time() - start_time,
+        }
+        return json.dumps({
+            'Status':1,
+            'Result':utils.unicode_obj(result)
+        }), 200, cors_resp_header
+
+    project_info = {
+        'name': project,
+        'status': 'DEBUG',
+        'script': request.form['script'],
+    }
+
+    if request.form.get('webdav_mode') == 'true':
+        projectdb = app.config['projectdb']
+        info = projectdb.get(project, fields=['name', 'script'])
+        if not info:
+            result = {
+                'fetch_result': "",
+                'logs': u' in wevdav mode, cannot load script',
+                'follows': [],
+                'messages': [],
+                'result': None,
+                'time': time.time() - start_time,
+            }
+            return json.dumps({
+                'Status':1,
+                'Result':utils.unicode_obj(result)
+            }), 200, cors_resp_header
+
+        project_info['script'] = info['script']
+
+    fetch_result = {}
+    try:
+        module = ProjectManager.build_module(project_info, {
+            'debugger': True,
+            'process_time_limit': app.config['process_time_limit'],
+        })
+
+        # The code below is to mock the behavior that crawl_config been joined when selected by scheduler.
+        # but to have a better view of joined tasks, it has been done in BaseHandler.crawl when `is_debugger is True`
+        # crawl_config = module['instance'].crawl_config
+        # task = module['instance'].task_join_crawl_config(task, crawl_config)
+
+        fetch_result = app.config['fetch'](task)
+        response = rebuild_response(fetch_result)
+
+        ret = module['instance'].run_task(module['module'], task, response)
+    except Exception:
+        type, value, tb = sys.exc_info()
+        tb = utils.hide_me(tb, globals())
+        logs = ''.join(traceback.format_exception(type, value, tb))
+        result = {
+            'fetch_result': fetch_result,
+            'logs': logs,
+            'follows': [],
+            'messages': [],
+            'result': None,
+            'time': time.time() - start_time,
+        }
+    else:
+        result = {
+            'fetch_result': fetch_result,
+            'logs': ret.logstr(),
+            'follows': ret.follows,
+            'messages': ret.messages,
+            'result': ret.result,
+            'time': time.time() - start_time,
+        }
+        result['fetch_result']['content'] = response.text
+        if (response.headers.get('content-type', '').startswith('image')):
+            result['fetch_result']['dataurl'] = dataurl.encode(
+                response.content, response.headers['content-type'])
+
+    try:
+        # binary data can't encode to JSON, encode result as unicode obj
+        # before send it to frontend
+        return json.dumps({
+                'Status':1,
+                'Result':utils.unicode_obj(result)
+            }), 200, cors_resp_header
+
+    except Exception:
+        type, value, tb = sys.exc_info()
+        tb = utils.hide_me(tb, globals())
+        logs = ''.join(traceback.format_exception(type, value, tb))
+        result = {
+            'fetch_result': "",
+            'logs': logs,
+            'follows': [],
+            'messages': [],
+            'result': None,
+            'time': time.time() - start_time,
+        }
+        return json.dumps({
+                'Status':1,
+                'Result':utils.unicode_obj(result)
+            }), 200, cors_resp_header
+
+@app.route('/api/debug/save/<project>', methods=['POST', ])
+def api_debug_save(project):
+    projectdb = app.config['projectdb']
+    if not projectdb.verify_project_name(project):
+        return json.dumps({
+                'Status':3,
+                'Message':'project name is not allowed!'
+            }), 200, cors_resp_header
+
+    script = request.form['script']
+    project_info = projectdb.get(project, fields=['name', 'status', 'group'])
+    if project_info and 'lock' in projectdb.split_group(project_info.get('group')) \
+            and not login.current_user.is_active():
+        return app.login_response
+
+    if project_info:
+        info = {
+            'script': script,
+        }
+        if project_info.get('status') in ('DEBUG', 'RUNNING', ):
+            info['status'] = 'CHECKING'
+        projectdb.update(project, info)
+    else:
+        info = {
+            'name': project,
+            'script': script,
+            'status': 'TODO',
+            'rate': app.config.get('max_rate', 1),
+            'burst': app.config.get('max_burst', 3),
+        }
+        projectdb.insert(project, info)
+
+    rpc = app.config['scheduler_rpc']
+    if rpc is not None:
+        try:
+            rpc.update_project()
+        except socket.error as e:
+            app.logger.warning('connect to scheduler rpc error: %r', e)
+            return json.dumps({
+                'Status':3,
+                'Message':'rpc error'
+            }), 200, cors_resp_header
+
+    return json.dumps({
+                'Status':1,
+                'Message':'ok'
+            }), 200, cors_resp_header

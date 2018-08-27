@@ -437,6 +437,55 @@ def phantomjs(ctx, phantomjs_path, port, auto_restart, args):
         _phantomjs = subprocess.Popen(cmd)
 
 
+
+@cli.command()
+@click.option('--port', default=9000, help='selenium port')
+@click.option('--auto-restart', default=False, help='auto restart selenium if crashed')
+@click.argument('args', nargs=-1)
+@click.pass_context
+def selenium(ctx, port, auto_restart, args):
+    """
+    Run selenium fetcher if selenium is installed.
+    """
+    args = args or ctx.default_map and ctx.default_map.get('args', [])
+
+    import subprocess
+    g = ctx.obj
+    _quit = []
+    selenium_fetcher = os.path.join(
+        os.path.dirname(pyspider.__file__), 'fetcher/selenium_fetcher.py')
+    
+    cmd = ['python3'] + list(args or []) + [selenium_fetcher]
+
+    try:
+        _selenium = subprocess.Popen(cmd)
+    except OSError as e:
+        logging.warning('selenium not found, continue running without it.')
+        print(e)
+        return None
+
+    def quit(*args, **kwargs):
+        _quit.append(1)
+        _selenium.kill()
+        _selenium.wait()
+        logging.info('selenium exited.')
+
+    if not g.get('selenium_proxy'):
+        g['selenium_proxy'] = '127.0.0.1:%s' % port
+
+    phantomjs = utils.ObjectDict(port=port, quit=quit)
+    g.instances.append(selenium)
+    if g.get('testing_mode'):
+        return selenium
+
+    while True:
+        _selenium.wait()
+        if _quit or not auto_restart:
+            break
+        _selenium = subprocess.Popen(cmd)
+
+
+
 @cli.command()
 @click.option('--fetcher-num', default=1, help='instance num of fetcher')
 @click.option('--processor-num', default=1, help='instance num of processor')
@@ -478,6 +527,15 @@ def all(ctx, fetcher_num, processor_num, result_worker_num, run_in):
             time.sleep(2)
             if threads[-1].is_alive() and not g.get('phantomjs_proxy'):
                 g['phantomjs_proxy'] = '127.0.0.1:%s' % phantomjs_config.get('port', 25555)
+
+        #selenium
+        # if not g.get('selenium_proxy'):
+        #     selenium_config = g.config.get('selenium', {})
+        #     selenium_config.setdefault('auto_restart', True)
+        #     threads.append(run_in(ctx.invoke, selenium, **selenium_config))
+        #     time.sleep(2)
+        #     if threads[-1].is_alive() and not g.get('selenium_proxy'):
+        #         g['selenium_proxy'] = '127.0.0.1:%s' % selenium_config.get('port', 9000)
 
         # result worker
         result_worker_config = g.config.get('result_worker', {})

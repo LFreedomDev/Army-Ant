@@ -133,6 +133,7 @@ class BaseHandler(object):
     __env__ = {'not_inited': True}
     retry_delay = {}
 
+
     def _reset(self):
         """
         reset before each task
@@ -413,6 +414,7 @@ class BaseHandler(object):
         assert self.task, "on_result can't outside a callback."
         if self.is_debugger():
             pprint(result)
+
         if self.__env__.get('result_queue'):
             self.__env__['result_queue'].put((self.task, result))
 

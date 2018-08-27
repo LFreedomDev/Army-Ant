@@ -897,14 +897,18 @@ class Scheduler(object):
                 self.put_task(task)
             else:
                 del task['schedule']
+        update_start = time.time()
         self.update_task(task)
+        update_end = time.time();
 
         project = task['project']
         self._cnt['5m'].event((project, 'success'), +1)
         self._cnt['1h'].event((project, 'success'), +1)
         self._cnt['1d'].event((project, 'success'), +1)
         self._cnt['all'].event((project, 'success'), +1).event((project, 'pending'), -1)
-        logger.info('task done %(project)s:%(taskid)s %(url)s', task)
+
+        logger.info('task done %(project)s:%(taskid)s %(url)s update task cast:' + str(update_end-update_start)+"s", task)
+
         return task
 
     def on_task_failed(self, task):

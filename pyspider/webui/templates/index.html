@@ -106,12 +106,13 @@
           </div>
         </div>
       </div>
+
       <table class="table sortable-theme-bootstrap projects table-striped table-hover">
         <thead>
           <tr>
-            <th>group</th>
-            <th>project name</th>
-            <th>comments</th>
+            <th style="width: 150px;">group</th>
+            <th style="width: 180px;">project name</th>
+            <th style="max-width: 200px;">comments</th>
             <th>status</th>
             <th data-type="num">rate/burst</th>
             <th data-type="num">avg time</th>
@@ -174,10 +175,12 @@
           </tr>
         </tbody>
       </table>
+
+
     </section>
     <script>
       // json projects data for vue
-      var projects = {{ projects | tojson | safe }};
+      var projects = {{ projects | tojson | safe }}
     </script>
     <script src="{{ url_for('cdn', path='twitter-bootstrap/3.1.1/js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('cdn', path='x-editable/1.5.0/bootstrap3-editable/js/bootstrap-editable.min.js') }}"></script>

@@ -7,12 +7,16 @@
 
 import socket
 from flask import abort, render_template, request, json
+from flask_cors import CORS
 
 from pyspider.libs import utils
 from .app import app
 
 import logging
 logger = logging.getLogger('web.task')
+
+
+cors = CORS(app, resources={r"/task/*": {"origins": "*"}})
 
 @app.route('/task/<taskid>')
 def task(taskid):
@@ -105,3 +109,87 @@ def active_tasks():
     return json.dumps(result), 200, {'Content-Type': 'application/json'}
 
 app.template_filter('format_date')(utils.format_date)
+
+
+
+cors_resp_header = {
+        'Content-Type': 'application/json',
+    }
+
+
+@app.route('/api/active_tasks')
+def api_active_tasks():
+    rpc = app.config['scheduler_rpc']
+    taskdb = app.config['taskdb']
+    project = request.args.get('project', "")
+    limit = int(request.args.get('limit', 100))
+
+    try:
+        updatetime_tasks = rpc.get_active_tasks(project, limit)
+    except socket.error as e:
+        app.logger.warning('connect to scheduler rpc error: %r', e)
+        return json.dumps({
+                    'Status':3,
+                    'Message':'connect to scheduler rpc error'
+                }), 200, cors_resp_header
+
+    tasks = {}
+    result = []
+
+    for updatetime, task in sorted(updatetime_tasks, key=lambda x: x[0]):
+        key = '%(project)s:%(taskid)s' % task
+        task['updatetime'] = updatetime
+        task['updatetime_text'] = utils.format_date(updatetime)
+
+        if key in tasks and tasks[key].get('status', None) != taskdb.ACTIVE:
+            result.append(tasks[key])
+        tasks[key] = task
+    result.extend(tasks.values())
+
+    return json.dumps({
+            'Status':1,
+            'Result':result
+        }), 200, cors_resp_header
+
+
+@app.route('/api/task/<taskid>')
+def api_task(taskid):
+    if ':' not in taskid:
+        return json.dumps({
+            'Status':3,
+            'Message':"bad project:task_id format"
+        }), 200, cors_resp_header
+
+    project, taskid = taskid.split(':', 1)
+
+    taskdb = app.config['taskdb']
+    task = taskdb.get_task(project, taskid)
+
+    if not task:
+        return json.dumps({
+            'Status':3,
+            'Message':"task not found"
+        }), 200, cors_resp_header
+    task['status_string'] = app.config['taskdb'].status_to_string(task['status'])
+
+
+    if "lastcrawltime" in task.keys():
+        task["lastcrawltime_text"] =utils.format_date(task["lastcrawltime"]) 
+    if "updatetime" in task.keys():
+        task["updatetime_text"] =utils.format_date(task["updatetime"]) 
+    if "exetime" in task.get("schedule",{}).keys():
+        task["schedule"]["exetime_text"] =utils.format_date(task["schedule"]["exetime"]) 
+
+
+    resultdb = app.config['resultdb']
+    result = {}
+    if resultdb:
+        result = resultdb.get(project, taskid)
+
+    if "result" in task.get("track",{}).get("process",{}).keys():
+        task["result"]= result
+
+    return json.dumps({
+            'Status':1,
+            'Result':task
+        }), 200, cors_resp_header
