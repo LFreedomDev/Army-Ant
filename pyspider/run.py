@@ -74,7 +74,9 @@ def connect_rpc(ctx, param, value):
 @click.option('--resultdb', envvar='RESULTDB', callback=connect_db,
               help='database url for resultdb, default: sqlite')
 @click.option('--requestdb', envvar='REQUESTDB', callback=connect_db,
-              help='database url for resultdb, default: sqlite')
+              help='database url for resultdb, default: mongodb')
+@click.option('--pretaskdb', envvar='PRETASKDB', callback=connect_db,
+              help='database url for pretaskdb, default: mongodb')
 @click.option('--message-queue', envvar='AMQP_URL',
               help='connection url to message queue, '
               'default: builtin multiprocessing.Queue')
@@ -99,7 +101,7 @@ def cli(ctx, **kwargs):
     logging.config.fileConfig(kwargs['logging_config'])
 
     # get db from env
-    for db in ('taskdb', 'projectdb', 'resultdb','requestdb'):
+    for db in ('taskdb', 'projectdb', 'resultdb','requestdb','pretaskdb'):
         if kwargs[db] is not None:
             continue
         if os.environ.get('MYSQL_NAME'):
@@ -181,12 +183,13 @@ def cli(ctx, **kwargs):
 @click.option('--active-tasks', default=100, help='active log size')
 @click.option('--loop-limit', default=1000, help='maximum number of tasks due with in a loop')
 @click.option('--fail-pause-num', default=10, help='auto pause the project when last FAIL_PAUSE_NUM task failed, set 0 to disable')
+@click.option('--fail-pause-time', default=5*60)
 @click.option('--scheduler-cls', default='pyspider.scheduler.ThreadBaseScheduler', callback=load_cls,
               help='scheduler class to be used.')
 @click.option('--threads', default=None, help='thread number for ThreadBaseScheduler, default: 4')
 @click.pass_context
 def scheduler(ctx, xmlrpc, xmlrpc_host, xmlrpc_port,
-              inqueue_limit, delete_time, active_tasks, loop_limit, fail_pause_num,
+              inqueue_limit, delete_time, active_tasks, loop_limit, fail_pause_num,fail_pause_time,
               scheduler_cls, threads, get_object=False):
     """
     Run Scheduler, only one scheduler is allowed.
@@ -206,6 +209,7 @@ def scheduler(ctx, xmlrpc, xmlrpc_host, xmlrpc_port,
     scheduler.ACTIVE_TASKS = active_tasks
     scheduler.LOOP_LIMIT = loop_limit
     scheduler.FAIL_PAUSE_NUM = fail_pause_num
+    scheduler.PAUSE_TIME = fail_pause_time
 
     g.instances.append(scheduler)
     if g.get('testing_mode') or get_object:
@@ -529,13 +533,13 @@ def all(ctx, fetcher_num, processor_num, result_worker_num, run_in):
                 g['phantomjs_proxy'] = '127.0.0.1:%s' % phantomjs_config.get('port', 25555)
 
         #selenium
-        # if not g.get('selenium_proxy'):
-        #     selenium_config = g.config.get('selenium', {})
-        #     selenium_config.setdefault('auto_restart', True)
-        #     threads.append(run_in(ctx.invoke, selenium, **selenium_config))
-        #     time.sleep(2)
-        #     if threads[-1].is_alive() and not g.get('selenium_proxy'):
-        #         g['selenium_proxy'] = '127.0.0.1:%s' % selenium_config.get('port', 9000)
+        if not g.get('selenium_proxy'):
+             selenium_config = g.config.get('selenium', {})
+             selenium_config.setdefault('auto_restart', True)
+             threads.append(run_in(ctx.invoke, selenium, **selenium_config))
+             time.sleep(2)
+             if threads[-1].is_alive() and not g.get('selenium_proxy'):
+                 g['selenium_proxy'] = '127.0.0.1:%s' % selenium_config.get('port', 9000)
 
         # result worker
         result_worker_config = g.config.get('result_worker', {})

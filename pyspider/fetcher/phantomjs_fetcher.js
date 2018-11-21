@@ -46,6 +46,7 @@ if (system.args.length !== 2) {
     var fetch = JSON.parse(request.postRaw);
     console.debug(JSON.stringify(fetch, null, 2));
 
+
     // create and set page
     var page = webpage.create();
     if (fetch.proxy) {

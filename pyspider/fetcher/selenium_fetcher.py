@@ -13,6 +13,8 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
+import logging
+logger = logging.getLogger('fetcher')
 
 @app.route('/', methods=['POST', 'GET'])
 def handle_post():
@@ -27,7 +29,7 @@ def handle_post():
         start_time = datetime.datetime.now()
         raw_data = request.get_data()
         fetch = json.loads(raw_data, encoding='utf-8')
-        print('fetch=', fetch)
+        #print('fetch=', fetch)
 
         result = {'orig_url': fetch['url'],
                   'status_code': 200,
@@ -52,10 +54,20 @@ def handle_post():
                 time.sleep(2)
                 InitWebDriver.isFirst = False
 
+            driver.implicitly_wait(10)#seconds
+            if fetch.get('js_script','')!= '':
+                driver.execute_script(fetch['js_script'])
+
             result['url'] = driver.current_url
             result['content'] = driver.page_source
             result['cookies'] = _parse_cookie(driver.get_cookies())
+            
         except Exception as e:
+            logger.error("=======================================================")
+            logger.error("=======================================================")
+            logger.error(e)
+            logger.error("=======================================================")
+            logger.error("=======================================================")
             result['error'] = str(e)
             result['status_code'] = 599
 

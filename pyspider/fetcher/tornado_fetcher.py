@@ -452,6 +452,7 @@ class Fetcher(object):
         start_time = time.time()
         self.on_fetch('phantomjs', task)
         handle_error = lambda x: self.handle_error('phantomjs', url, task, start_time, x)
+    
 
         # check phantomjs proxy is enabled
         if not self.phantomjs_proxy:
@@ -510,10 +511,16 @@ class Fetcher(object):
 
         # making requests
         fetch['headers'] = dict(fetch['headers'])
+        #logger.warning("=======================================")
+        #logger.warning(fetch)
+        #logger.warning(request_conf)
+        #logger.warning("=======================================")
+
         try:
             request = tornado.httpclient.HTTPRequest(
                 url=self.phantomjs_proxy, method="POST",
                 body=json.dumps(fetch), **request_conf)
+
         except Exception as e:
             raise gen.Return(handle_error(e))
 
